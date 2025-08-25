@@ -1,0 +1,30 @@
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.20.0
+scikit-learn>=1.0.0
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+
+# Data extraction
+yfinance>=0.2.0
+newsapi-python>=0.2.0
+requests>=2.25.0
+beautifulsoup4>=4.10.0
+
+# Sentiment analysis
+textblob>=0.17.0
+vaderSentiment>=3.3.0
+
+# Technical analysis
+TA-Lib>=0.4.0
+
+# Web framework and visualization
+streamlit>=1.25.0
+plotly>=5.0.0
+
+# Database and utilities
+python-dotenv>=1.0.0
+schedule>=1.0.0
+click>=8.0.0
+tqdm>=4.60.0
+joblib>=1.0.0
