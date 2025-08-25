@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Jupyter and notebooks
+.ipynb_checkpoints/
+
+# OS/editor files
+.DS_Store
+*.swp
+*.swo
+
+# Local environment & secrets
+.env
+.env.*
+!.env.template
+
+# Logs & data
+logs/
+/data/*
+!/data/.gitkeep
+!/data/raw/
+!/data/processed/
+
+# Models (optional: keep a .gitkeep if you want the dir tracked)
+/models/saved_models/*
+!/models/saved_models/.gitkeep
+

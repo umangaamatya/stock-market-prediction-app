@@ -38,53 +38,98 @@ A comprehensive stock market prediction platform that combines technical analysi
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- macOS (tested), Linux and Windows should also work
+- Python 3.10+ (recommended)
+- Conda (Anaconda/Miniconda) OR Docker Desktop
 - PostgreSQL 12+
 - 4GB RAM (8GB recommended)
 
-### 1. Installation
+You can run the project either with Docker (easiest) or locally with Conda.
+
+### Option A: Docker (recommended)
 ```bash
-# Clone the repository
+# 1) Clone the repository
 git clone https://github.com/yourusername/stock-market-prediction-app.git
 cd stock-market-prediction-app
 
-# Run automated installer
-python scripts/install.py
-```
-
-### 2. Configuration
-```bash
-# Copy environment template
+# 2) Copy and edit environment variables
 cp .env.template .env
+# Edit .env and set at least:
+#   POSTGRES_PASSWORD=your_secure_password
+# Optional API keys:
+#   NEWS_API_KEY=...
+#   ALPHA_VANTAGE_API_KEY=...
 
-# Edit with your settings
-nano .env
+# 3) Start services (DB, cache, app, and ETL)
+# First bring up Postgres and Redis so DB init succeeds
+docker compose up -d postgres redis
+# Then build and start the app and the continuous ETL service
+docker compose up --build -d stock_app etl_service
+
+# 4) Open the app
+# App will be on:
+#   http://localhost:8501
 ```
+Notes:
+- The nginx service is only for production and not required locally.
+- If you add API keys later, restart the affected containers: `docker compose restart stock_app etl_service`.
 
-### 3. Database Setup
-```sql
--- Create database
-CREATE DATABASE stock_market_db;
-CREATE USER stock_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE stock_market_db TO stock_user;
-```
-
-### 4. Load Initial Data
+### Option B: Local (Conda on macOS)
 ```bash
-# Activate virtual environment
-source venv/bin/activate
+# 1) Clone the repository
+git clone https://github.com/yourusername/stock-market-prediction-app.git
+cd stock-market-prediction-app
 
-# Validate setup
-python -m etl.etl_pipeline --validate
+# 2) Create and activate a clean Python 3.10 environment (recommended)
+conda create -y -n stockapp python=3.10
+conda activate stockapp
 
-# Load data
-python -m etl.etl_pipeline --mode full --period 1y
-```
+# 3) Install TA-Lib via conda-forge (works reliably on macOS/Apple Silicon)
+conda install -y -c conda-forge ta-lib
 
-### 5. Start Application
-```bash
+# 4) Install Python dependencies (pinned)
+# If the pinned set fails on your platform, you can fall back to requirements_simple.txt
+pip install -r requirements.txt || pip install -r requirements_simple.txt
+
+# 5) Install the Stooq data reader (used as fallback when Yahoo rate-limits)
+pip install pandas-datareader
+
+# 6) Configure environment variables
+cp .env.template .env
+# Edit .env to match your local DB and optional API keys
+# Key settings:
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT
+#   NEWS_API_KEY (optional), ALPHA_VANTAGE_API_KEY (optional)
+
+# 7) Create PostgreSQL database and user (example)
+# Adjust commands for your setup. On macOS (Homebrew):
+#   brew services start postgresql@14
+# Then connect and run:
+#   psql -d postgres
+# Inside psql:
+#   CREATE DATABASE stock_market_db;
+#   CREATE USER stock_user WITH PASSWORD 'your_secure_password';
+#   GRANT ALL PRIVILEGES ON DATABASE stock_market_db TO stock_user;
+#   \q
+
+# 8) Load initial data (full load, ~1y)
+python scripts/run_etl.py --mode full --period 1y
+# Tip: If Yahoo Finance rate-limits (HTTP 429), the extractor will automatically
+#      fall back to Stooq daily data to complete the load.
+
+# 9) Start the Streamlit app
 streamlit run web_app/app.py
+# App will be on:
+#   http://localhost:8501
 ```
+
+Alternative installer (optional):
+- There is a helper script at `scripts/install.py` that creates a venv and installs dependencies.
+  On macOS with Apple Silicon, Conda + conda-forge TA-Lib tends to be more reliable than compiling TA-Lib from pip.
+
+### Notes on data providers
+- Yahoo Finance (via yfinance) is the primary free source used. It can temporarily rate-limit (HTTP 429). In that case, the pipeline falls back to Stooq (via pandas-datareader) for daily data.
+- Alpha Vantage is optional. If you set `ALPHA_VANTAGE_API_KEY`, the pipeline can blend that data as well.
 
 Visit http://localhost:8501 🎉
 

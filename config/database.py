@@ -219,6 +219,10 @@ def execute_raw_query(query: str, params: dict = None) -> pd.DataFrame:
             return pd.DataFrame()
     return pd.DataFrame()
 
+# Global database manager instance for pipeline modules
+# Note: This is initialized lazily on first connect()
+db_manager = DatabaseManager()
+
 def bulk_insert_data(table_class, data: list, session: Session = None):
     """Bulk insert data into specified table"""
     if session is None:
